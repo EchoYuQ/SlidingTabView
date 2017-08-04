@@ -3,6 +3,7 @@ package com.lixue.aibei.slidingtitlebar;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -16,16 +17,14 @@ import android.widget.TextView;
 
 import com.lixue.aibei.slidingtitlebarlib.SlidingTabScript;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity {
     private SlidingTabScript slidingTabScript;
     private ViewPager viewPager;
+    private List<Fragment> mFragmentList = new ArrayList<>();
 
-    private TextView tab1;
-    private TextView tab2;
-    private TextView tab3;
-    private TextView tab4;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,35 +33,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
         initView();
         initData();
-
-
-        tab1 = (TextView) findViewById(R.id.tab1);
-        tab2 = (TextView) findViewById(R.id.tab2);
-        tab3 = (TextView) findViewById(R.id.tab3);
-        tab4 = (TextView) findViewById(R.id.tab4);
-
-        tab1.setOnClickListener(this);
-        tab2.setOnClickListener(this);
-        tab3.setOnClickListener(this);
-        tab4.setOnClickListener(this);
-
     }
 
     private void initView() {
         slidingTabScript = (SlidingTabScript) findViewById(R.id.slidingTabScript);
         viewPager = (ViewPager) findViewById(R.id.viewpager);
-
-
     }
 
     private void initData() {
@@ -86,48 +63,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                parent.addView(textView);
 //            }
 //        });
-        List<String> nameStr = slidingTabScript.getTabName();
-        viewPager.setAdapter(new ViewPagerAdapter(MainActivity.this, nameStr));
-//        viewPager.setCurrentItem(0);
+
+//        List<String> nameStr = slidingTabScript.getTabName();
+//        viewPager.setAdapter(new ViewPagerAdapter(MainActivity.this, nameStr));
+        mFragmentList.add(new MyFragment1());
+        mFragmentList.add(new MyFragment2());
+        mFragmentList.add(new MyFragment3());
+        mFragmentList.add(new MyFragment4());
+        viewPager.setAdapter(new MyViewPagerAdapter(getSupportFragmentManager(), MainActivity.this, mFragmentList));
         slidingTabScript.setViewPager(viewPager);
 
         slidingTabScript.selectTab(0);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onClick(View view) {
-
-        switch (view.getId())
-        {
-            case R.id.tab1:
-                slidingTabScript.selectTab(0);
-
-                break;
-            case R.id.tab2:
-                slidingTabScript.selectTab(1);
-                break;
-            case R.id.tab3:
-                slidingTabScript.selectTab(2);
-                break;
-            case R.id.tab4:
-                slidingTabScript.selectTab(3);
-                break;
-        }
-
-    }
 }

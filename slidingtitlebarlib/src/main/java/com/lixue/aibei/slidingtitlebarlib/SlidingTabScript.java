@@ -24,19 +24,27 @@ import java.util.List;
  * 滑动选项卡
  * Created by xueli on 2016/3/8.
  */
-public class SlidingTabScript extends HorizontalScrollView {
+public class SlidingTabScript extends HorizontalScrollView implements View.OnClickListener {
     private static final String TAG = "SlidingTabScript";
 
-    /**是否充满屏幕**/
+    /**
+     * 是否充满屏幕
+     **/
     private boolean allowWidthFull;
-    /**是否禁用viewPager**/
+    /**
+     * 是否禁用viewPager
+     **/
     private boolean disableViewPager;
-    /**是否禁用拉伸滑动块**/
+    /**
+     * 是否禁用拉伸滑动块
+     **/
     private boolean disableTensileSlidingBlock;
-    /**滑动块**/
+    /**
+     * 滑动块
+     **/
     private Drawable slidingBlock;
 
-    private float currentPositionOffset;	//当前位置偏移量
+    private float currentPositionOffset;    //当前位置偏移量
     private int lastScrollX;//上一次的位置
     private int lastOffset;
     private boolean start;
@@ -49,33 +57,11 @@ public class SlidingTabScript extends HorizontalScrollView {
     private TabViewFactory tabViewFactory;//tabview生成器
 
     public SlidingTabScript(Context context) {
-        super(context);
+        this(context, null);
     }
 
     public SlidingTabScript(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        setHorizontalScrollBarEnabled(false);
-        removeAllViews();
-        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.SlidingTabScript);
-        if (typedArray != null){
-            int a = typedArray.getIndexCount();
-            for (int i = 0;i<a;i++){
-                int attr = typedArray.getIndex(i);
-                if (attr == R.styleable.SlidingTabScript_allowWidthFull) {
-                    allowWidthFull = typedArray.getBoolean(attr, false);
-                    Log.i(TAG, "allowWidthFull: " + (!allowWidthFull ? "false" : "true"));
-                }else if(attr == R.styleable.SlidingTabScript_disableTensileSlidingBlock){
-                    disableTensileSlidingBlock = typedArray.getBoolean(attr,false);
-                    Log.i(TAG, "disableTensileSlidingBlock: " + (!disableTensileSlidingBlock ? "false" : "true"));
-                }else if(attr == R.styleable.SlidingTabScript_disableViewPager){
-                    disableViewPager = typedArray.getBoolean(attr,false);
-                    Log.i(TAG, "disableViewPager: " + (!disableViewPager ? "false" : "true"));
-                }else if(attr == R.styleable.SlidingTabScript_slidingBlock){
-                    slidingBlock = typedArray.getDrawable(attr);
-                }
-            }
-            typedArray.recycle();
-        }
+        this(context, attrs, 0);
     }
 
     public SlidingTabScript(Context context, AttributeSet attrs, int defStyleAttr) {
@@ -83,24 +69,40 @@ public class SlidingTabScript extends HorizontalScrollView {
         setHorizontalScrollBarEnabled(false);
         removeAllViews();
         TypedArray typedArray = context.getTheme().obtainStyledAttributes(attrs, R.styleable.SlidingTabScript, defStyleAttr, 0);
-        if (typedArray != null){
+        if (typedArray != null) {
             int a = typedArray.getIndexCount();
-            for (int i = 0;i<a;i++){
+            for (int i = 0; i < a; i++) {
                 int attr = typedArray.getIndex(i);
                 if (attr == R.styleable.SlidingTabScript_allowWidthFull) {
                     allowWidthFull = typedArray.getBoolean(attr, false);
                     Log.i(TAG, "allowWidthFull: " + (!allowWidthFull ? "false" : "true"));
-                }else if(attr == R.styleable.SlidingTabScript_disableTensileSlidingBlock){
-                    disableTensileSlidingBlock = typedArray.getBoolean(attr,false);
+                } else if (attr == R.styleable.SlidingTabScript_disableTensileSlidingBlock) {
+                    disableTensileSlidingBlock = typedArray.getBoolean(attr, false);
                     Log.i(TAG, "disableTensileSlidingBlock: " + (!disableTensileSlidingBlock ? "false" : "true"));
-                }else if(attr == R.styleable.SlidingTabScript_disableViewPager){
-                    disableViewPager = typedArray.getBoolean(attr,false);
+                } else if (attr == R.styleable.SlidingTabScript_disableViewPager) {
+                    disableViewPager = typedArray.getBoolean(attr, false);
                     Log.i(TAG, "disableViewPager: " + (!disableViewPager ? "false" : "true"));
-                }else if(attr == R.styleable.SlidingTabScript_slidingBlock){
+                } else if (attr == R.styleable.SlidingTabScript_slidingBlock) {
                     slidingBlock = typedArray.getDrawable(attr);
                 }
             }
             typedArray.recycle();
+
+
+        }
+
+
+    }
+
+    /**
+     * 注册tab的点击事件
+     */
+    private void registerClickEvent() {
+        if (getTabsLayout() != null && getTabsLayout().getChildCount() > 0) {
+            for (int i = 0; i < getTabsLayout().getChildCount(); i++) {
+                getTabsLayout().getChildAt(i).setOnClickListener(this);
+            }
+
         }
     }
 
@@ -123,72 +125,81 @@ public class SlidingTabScript extends HorizontalScrollView {
 
         if (!allowWidthFull) return;
         ViewGroup tabsLayout = getTabsLayout();
-        if (tabsLayout == null){
-            Log.i(TAG,"tabsLayout is null");
+        if (tabsLayout == null) {
+            Log.i(TAG, "tabsLayout is null");
             return;
         }
-        if (tabsLayout.getChildCount() <= 0){
-            Log.i(TAG,"tabsLayout's childCount is <= 0");
+        if (tabsLayout.getChildCount() <= 0) {
+            Log.i(TAG, "tabsLayout's childCount is <= 0");
             return;
         }
-        if (tabsView == null){
+        if (tabsView == null) {
             tabsView = new ArrayList<View>();
-        }else{
+        } else {
             tabsView.clear();
         }
-        for (int j = 0 ;j < tabsLayout.getChildCount();j++){
+        for (int j = 0; j < tabsLayout.getChildCount(); j++) {
             tabsView.add(tabsLayout.getChildAt(j));
         }
 
-        ajustChildWidthWithParent(tabsView,getMeasuredWidth()-tabsLayout.getPaddingLeft()-tabsLayout.getPaddingRight(),widthMeasureSpec,heightMeasureSpec);
-        super.onMeasure(widthMeasureSpec,heightMeasureSpec);
+        ajustChildWidthWithParent(tabsView, getMeasuredWidth() - tabsLayout.getPaddingLeft() - tabsLayout.getPaddingRight(), widthMeasureSpec, heightMeasureSpec);
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
-    /**重新测量标题布局（tabs）位置**/
-    private void ajustChildWidthWithParent(List<View> tabsView,int mWidth,int widthMeasureSpec,int heigthMeasureSpec){
-        /**去掉所有子view的外边距**/
-        for(View v : tabsView){
-            if (v.getLayoutParams() instanceof MarginLayoutParams){
+    @Override
+    protected void onFinishInflate() {
+        super.onFinishInflate();
+        registerClickEvent();
+
+    }
+
+    /**
+     * 重新测量标题布局（tabs）位置
+     **/
+    private void ajustChildWidthWithParent(List<View> tabsView, int mWidth, int widthMeasureSpec, int heigthMeasureSpec) {
+        // 去掉所有子view的外边距
+        for (View v : tabsView) {
+            if (v.getLayoutParams() instanceof MarginLayoutParams) {
                 LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) v.getLayoutParams();
                 mWidth -= lp.leftMargin + lp.rightMargin;
             }
         }
 
-        /**去掉宽度大于平均宽度的view后 再次计算平均宽度**/
+        // 去掉宽度大于平均宽度的view后 再次计算平均宽度
         int avgWidth = mWidth / tabsView.size();
         int bigTabcount = tabsView.size();
-        while (true){
+        while (true) {
             Iterator<View> iterator = tabsView.iterator();
-            while (iterator.hasNext()){
+            while (iterator.hasNext()) {
                 View view = iterator.next();
-                if (view.getMeasuredWidth()>avgWidth){
+                if (view.getMeasuredWidth() > avgWidth) {
                     mWidth -= view.getMeasuredWidth();
-                    bigTabcount --;
+                    bigTabcount--;
                     iterator.remove();
                 }
             }
             if (bigTabcount <= 0) break;
             avgWidth = mWidth / bigTabcount;
             boolean end = true;
-            for (View v : tabsView){
-                if (v.getMeasuredWidth() > avgWidth){
+            for (View v : tabsView) {
+                if (v.getMeasuredWidth() > avgWidth) {
                     end = false;
                 }
             }
             if (end) break;
         }
 
-        /**修改宽度小于新的平均宽度的view**/
-        for(View view : tabsView){
-            if(view.getMeasuredWidth() < avgWidth){
-                Log.i(TAG,"avgWidth : " + avgWidth +", 子view的宽度 : " + view.getMeasuredWidth());
+        // 修改宽度小于新的平均宽度的view
+        for (View view : tabsView) {
+            if (view.getMeasuredWidth() < avgWidth) {
+                Log.i(TAG, "avgWidth : " + avgWidth + ", 子view的宽度 : " + view.getMeasuredWidth());
                 LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) view.getLayoutParams();
                 layoutParams.width = avgWidth;
                 view.setLayoutParams(layoutParams);
                 // 再次测量让新宽度生效
-                if(layoutParams instanceof MarginLayoutParams){
+                if (layoutParams instanceof MarginLayoutParams) {
                     measureChildWithMargins(view, widthMeasureSpec, 0, heigthMeasureSpec, 0);
-                }else{
+                } else {
                     measureChild(view, widthMeasureSpec, heigthMeasureSpec);
                 }
             }
@@ -211,15 +222,15 @@ public class SlidingTabScript extends HorizontalScrollView {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         if (disableViewPager) return;
-        if (tabsLayout != null && tabsLayout.getChildCount() > 0 && slidingBlock != null){
+        if (tabsLayout != null && tabsLayout.getChildCount() > 0 && slidingBlock != null) {
             ViewGroup tabsLayout = getTabsLayout();
             View currentView = tabsLayout.getChildAt(currentIndex);
-            if (currentView != null){
+            if (currentView != null) {
                 float left = currentView.getLeft();
                 float right = currentView.getRight();
                 if (currentPositionOffset > 0f && currentIndex < tabsLayout.getChildCount() - 1) {
                     View nextTab = tabsLayout.getChildAt(currentIndex + 1);
-                    if(nextTab != null){
+                    if (nextTab != null) {
                         final float nextTabLeft = nextTab.getLeft();
                         final float nextTabRight = nextTab.getRight();
                         left = (currentPositionOffset * nextTabLeft + (1f - currentPositionOffset) * left);
@@ -227,10 +238,10 @@ public class SlidingTabScript extends HorizontalScrollView {
                     }
                 }
                 // 不拉伸
-                if(disableTensileSlidingBlock){
-                    int center = (int) (left + (right-left)/2);
-                    left = center - slidingBlock.getIntrinsicWidth()/2;
-                    right = center + slidingBlock.getIntrinsicWidth()/2;
+                if (disableTensileSlidingBlock) {
+                    int center = (int) (left + (right - left) / 2);
+                    left = center - slidingBlock.getIntrinsicWidth() / 2;
+                    right = center + slidingBlock.getIntrinsicWidth() / 2;
                 }
                 slidingBlock.setBounds((int) left, getHeight() - slidingBlock.getIntrinsicHeight(), (int) right, getHeight());
                 slidingBlock.draw(canvas);
@@ -239,9 +250,11 @@ public class SlidingTabScript extends HorizontalScrollView {
         }
     }
 
-    /**获取tabs布局，例如《排行，精品，分类，管理》的tabs布局**/
-    private ViewGroup getTabsLayout(){
-        if (tabsLayout ==  null) {
+    /**
+     * 获取tabs布局，例如 【全部课】【付费课】【免费课】【过期课】的tabs布局
+     **/
+    private ViewGroup getTabsLayout() {
+        if (tabsLayout == null) {
             if (getChildCount() > 0) {
                 this.tabsLayout = (ViewGroup) getChildAt(0);
             } else {
@@ -259,63 +272,69 @@ public class SlidingTabScript extends HorizontalScrollView {
         return tabsLayout;
     }
 
-    /**得到tab的数量**/
-    public int getTabCount(){
-        if (tabsLayout != null){
+    /**
+     * 得到tab的数量
+     **/
+    public int getTabCount() {
+        if (tabsLayout != null) {
             return tabsLayout.getChildCount();
         }
         return 0;
     }
 
-    /**得到tab的名字**/
-    public List<String> getTabName(){
+    /**
+     * 得到tab的名字
+     **/
+    public List<String> getTabName() {
         getTabsLayout();
         List<String> listStr = new ArrayList<>();
-        if (tabsLayout != null && tabsLayout.getChildCount() > 0){
-            for (int w = 0;w < tabsLayout.getChildCount();w ++){
+        if (tabsLayout != null && tabsLayout.getChildCount() > 0) {
+            for (int w = 0; w < tabsLayout.getChildCount(); w++) {
                 String name = (String) ((TextView) tabsLayout.getChildAt(w)).getText();
                 listStr.add(name);
-                Log.i(TAG,"tag name :" + name);
+                Log.i(TAG, "tag name :" + name);
             }
         }
         return listStr;
     }
 
-    /**设置ViewPager**/
-    public void setViewPager(final ViewPager viewPager){
+    /**
+     * 设置ViewPager
+     **/
+    public void setViewPager(final ViewPager viewPager) {
         if (disableViewPager) return;
         this.viewPager = viewPager;
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int positon, float positionOffset, int positionOffsetPixels) {
                 ViewGroup tabsLayout = getTabsLayout();
-                if(positon < tabsLayout.getChildCount()){
+                if (positon < tabsLayout.getChildCount()) {
                     View view = tabsLayout.getChildAt(positon);
-                    if(view != null){
+                    if (view != null) {
                         currentIndex = positon;
                         currentPositionOffset = positionOffset;
-                        Log.i(TAG,"position:" + positon);
+                        Log.i(TAG, "position:" + positon);
                         /**从当前位置滚动到偏移量的位置**/
-                        int offset = (int)positionOffset * (view.getWidth() + getLeftMargin(view) + getRightMargin(view));
-                        Log.i(TAG,"offset :" + offset);
+                        int offset = (int) positionOffset * (view.getWidth() + getLeftMargin(view) + getRightMargin(view));
+                        Log.i(TAG, "offset :" + offset);
                         //计算新的X坐标
                         int newScrollX = view.getLeft() + offset - getLeftMargin(view);
-                        Log.i(TAG,"newScrollX :" + newScrollX);
+                        Log.i(TAG, "newScrollX :" + newScrollX);
                         if (positon > 0 || offset > 0) {
-                            newScrollX -= getWidth()/2 - getOffset(view.getWidth())/2;
-                            Log.i(TAG,"getWidth()/2:"+getWidth()/2 + ",getoffset()/2:"+ getOffset(view.getWidth())/2 + ",newScrollx:" + newScrollX);
+                            newScrollX -= getWidth() / 2 - getOffset(view.getWidth()) / 2;
+                            Log.i(TAG, "getWidth()/2:" + getWidth() / 2 + ",getoffset()/2:" + getOffset(view.getWidth()) / 2 + ",newScrollx:" + newScrollX);
                         }
 
                         //如果同上次X坐标不一样就执行滚动
                         if (newScrollX != lastScrollX) {
                             lastScrollX = newScrollX;
-                            Log.i(TAG,"newScrollX : " + newScrollX +", lastScrollX :" + lastScrollX);
+                            Log.i(TAG, "newScrollX : " + newScrollX + ", lastScrollX :" + lastScrollX);
                             scrollTo(newScrollX, 0);
                         }
                         invalidate();
                     }
                 }
-                if(onPageChangeListener != null){
+                if (onPageChangeListener != null) {
                     onPageChangeListener.onPageScrolled(positon, positionOffset, positionOffsetPixels);
                 }
             }
@@ -323,14 +342,14 @@ public class SlidingTabScript extends HorizontalScrollView {
             @Override
             public void onPageSelected(int position) {
                 selectTab(position);
-                if (onPageChangeListener != null){
+                if (onPageChangeListener != null) {
                     onPageChangeListener.onPageSelected(position);
                 }
             }
 
             @Override
             public void onPageScrollStateChanged(int state) {
-                if(onPageChangeListener != null){
+                if (onPageChangeListener != null) {
                     onPageChangeListener.onPageScrollStateChanged(state);
                 }
             }
@@ -339,32 +358,35 @@ public class SlidingTabScript extends HorizontalScrollView {
         //特别的当view的layoutparameter发生改变，并且它的值还没能应用到view上，这时候适合调用这个方法。
         requestLayout();
     }
-    /**指定的tab被选中**/
-    public void selectTab(int position){
+
+    /**
+     * 指定的tab被选中
+     **/
+    public void selectTab(int position) {
         ViewGroup tabsLayout = getTabsLayout();
-        if (position > -1 && tabsLayout != null && position < tabsLayout.getChildCount()){
-            for (int w =0 ;w < tabsLayout.getChildCount();w ++){
+        if (position > -1 && tabsLayout != null && position < tabsLayout.getChildCount()) {
+            for (int w = 0; w < tabsLayout.getChildCount(); w++) {
                 View thisTab = tabsLayout.getChildAt(w);
-                thisTab.setSelected(position==w);
+                thisTab.setSelected(position == w);
             }
 
         }
         currentIndex = position;
-        viewPager.setCurrentItem(position);
+        viewPager.setCurrentItem(position, false);
     }
 
-    private int getLeftMargin(View view){
-        if (view.getLayoutParams() instanceof MarginLayoutParams){
+    private int getLeftMargin(View view) {
+        if (view.getLayoutParams() instanceof MarginLayoutParams) {
             LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) view.getLayoutParams();
-            return  lp.leftMargin;
+            return lp.leftMargin;
         }
         return 0;
     }
 
-    private int getRightMargin(View view){
-        if (view.getLayoutParams() instanceof MarginLayoutParams){
+    private int getRightMargin(View view) {
+        if (view.getLayoutParams() instanceof MarginLayoutParams) {
             LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) view.getLayoutParams();
-            return  lp.rightMargin;
+            return lp.rightMargin;
         }
         return 0;
     }
@@ -373,26 +395,27 @@ public class SlidingTabScript extends HorizontalScrollView {
     /**
      * 获取偏移量
      */
-    private int getOffset(int newOffset){
-        if(lastOffset < newOffset){
-            if(start){
+    private int getOffset(int newOffset) {
+        if (lastOffset < newOffset) {
+            if (start) {
                 lastOffset += 1;
                 return lastOffset;
-            }else{
+            } else {
                 start = true;
                 lastOffset += 1;
                 return lastOffset;
             }
-        }if(lastOffset > newOffset){
-            if(start){
+        }
+        if (lastOffset > newOffset) {
+            if (start) {
                 lastOffset -= 1;
                 return lastOffset;
-            }else{
+            } else {
                 start = true;
                 lastOffset -= 1;
                 return lastOffset;
             }
-        }else{
+        } else {
             start = true;
             lastOffset = newOffset;
             return lastOffset;
@@ -401,11 +424,12 @@ public class SlidingTabScript extends HorizontalScrollView {
 
     /**
      * 设置不使用ViewPager
+     *
      * @param disableViewPager 不使用ViewPager
      */
     public void setDisableViewPager(boolean disableViewPager) {
         this.disableViewPager = disableViewPager;
-        if(viewPager != null){
+        if (viewPager != null) {
             viewPager.setOnPageChangeListener(onPageChangeListener);
             viewPager = null;
         }
@@ -414,19 +438,39 @@ public class SlidingTabScript extends HorizontalScrollView {
 
     /**
      * 设置TabView生成器
+     *
      * @param tabViewFactory
      */
     public void setTabViewFactory(TabViewFactory tabViewFactory) {
         this.tabViewFactory = tabViewFactory;
-        tabViewFactory.addTabs(getTabsLayout(), viewPager!=null?viewPager.getCurrentItem():0);
+        tabViewFactory.addTabs(getTabsLayout(), viewPager != null ? viewPager.getCurrentItem() : 0);
+    }
+
+    @Override
+    public void onClick(View view) {
+
+        Log.d("单击了Tab按钮", "id:" + view.getId());
+        if (getTabsLayout() != null && getTabsLayout().getChildCount() > 0) {
+            for (int i = 0; i < getTabsLayout().getChildCount(); i++) {
+                if (view.getId() == getTabsLayout().getChildAt(i).getId()) {
+                    selectTab(i);
+                    break;
+                }
+
+            }
+
+        }
+
+
     }
 
     /**
      * TabView生成器
      */
-    public interface TabViewFactory{
+    public interface TabViewFactory {
         /**
          * 添加tab
+         *
          * @param parent
          * @param defaultPosition
          */
