@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 第一层 -->
+    <item>
+        <shape>
+            <!-- 矩形的圆角弧度 -->
+            <corners android:radius="5dp" />
+            <!-- 矩形的填充色 -->
+            <!--<solid android:color="#3F51B5" />-->
+            <!--&lt;!&ndash; 矩形的边框的宽度,每段虚线的长度，和两段虚线之间的颜色和颜色 &ndash;&gt;-->
+            <!--<stroke-->
+            <!--android:width="1dp"-->
+            <!--android:color="#4eb621"-->
+            <!--android:dashGap="4dp"-->
+            <!--android:dashWidth="8dp" />-->
+            <gradient
+                android:centerX="0.5"
+                android:centerY="0.5"
+                android:endColor="@color/address_btn_add_2"
+                android:startColor="@color/address_btn_add_1"
+                android:type="linear" />
+        </shape>
+    </item>
+    <!-- 第二层 -->
+    <item
+        android:bottom="4dp"
+        android:right="10dp">
+        <shape>
+            <solid android:color="#8019CF88" />
+            <corners android:radius="5dp" />
+            <!-- 描边 -->
+            <!--<stroke-->
+            <!--android:width="1dp"-->
+            <!--android:color="#ffffffff" />-->
+        </shape>
+    </item>
+</layer-list>
